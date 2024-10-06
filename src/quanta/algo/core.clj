@@ -19,13 +19,12 @@
 (defn- add-cells [d time-fn cell-spec]
   (doall (map #(add-cell d time-fn %) cell-spec)))
 
-
 (defn add-env-time-live
   "creates a dag from an algo-spec
    time-events are generated live with the passing of time."
   [dag]
   (let [time-fn live-calendar]
-     (write-edn-raw (:logger dag) "\r\ntime-mode" {:dt-mode :live})
+    (write-edn-raw (:logger dag) "\r\ntime-mode" {:dt-mode :live})
     (assoc dag :time-fn time-fn :dt-mode :live)))
 
 (defn add-env-time-snapshot
@@ -45,10 +44,9 @@
     (add-cells dag time-fn cell-spec)
     dag))
 
-
 #_(defn calculate-cell-once
-  "creates a snapshot dag as of dt from an algo spec, 
+    "creates a snapshot dag as of dt from an algo spec, 
    and calculates and returns cell-id"
-  [dag-env algo-spec dt cell-id]
-  (let [d (create-dag-snapshot dag-env algo-spec dt)]
-    (dag/get-current-valid-value d cell-id)))
+    [dag-env algo-spec dt cell-id]
+    (let [d (create-dag-snapshot dag-env algo-spec dt)]
+      (dag/get-current-valid-value d cell-id)))
