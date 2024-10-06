@@ -1,6 +1,7 @@
 (ns quanta.dag.trace
   (:require
    [clojure.string :as str]
+   [babashka.fs :as fs]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [clojure.stacktrace]
    [tick.core :as t]))
@@ -31,6 +32,7 @@
   (let [dt (-> (t/zoned-date-time) (t/in "UTC"))
         dtformat (t/formatter "YYYY-MM-dd-HH-mm-ss")
         filename (str path (t/format dtformat dt) "-" id ".txt")]
+    (fs/create-dirs path)
     (info "dag " id " logged to: " filename)
     (write-text filename (str "dag id: " id))
     filename))

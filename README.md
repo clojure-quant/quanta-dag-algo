@@ -6,6 +6,12 @@ dag-algo
   - cells can depend on other cells
   - is used to calculate algos either in live or snapshot mode.
 
+
+# developers
+
+start nrepl in dev deps.edn project.
+
+
 # unit tests
 
 ```
