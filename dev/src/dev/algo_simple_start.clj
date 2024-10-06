@@ -2,17 +2,16 @@
   (:require
    [tick.core :as t]
    [quanta.dag.core :as dag]
-   [quanta.algo.core :as create]
+   [quanta.algo.core :as algo]
    [dev.algo-simple :refer [simple-algo]]))
 
 ;; SNAPSHOT ************************************************************
 
 (def simple
-  (create/create-dag-snapshot
-   {:log-dir ".data/"
-    :env {}}
-   simple-algo
-   (t/instant)))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env {}})
+      (algo/add-env-time-snapshot (t/instant))
+      (algo/add-algo simple-algo)))
 
 (dag/cell-ids simple)
 ;; => ([:crypto :m] :algo)
@@ -28,10 +27,10 @@
 ;; LIVE ****************************************************************
 
 (def simple-rt
-  (create/create-dag-live
-   {:log-dir ".data/"
-    :env {}}
-   simple-algo))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env {}})
+      (algo/add-env-time-live)
+      (algo/add-algo simple-algo)))
 
 (dag/start-log-cell simple-rt :algo)
 (dag/stop-all! simple-rt)
@@ -39,10 +38,10 @@
 ;; TEST A SECOND DAG at the same time. 
 
 (def simple-rt2
-  (create/create-dag-live
-   {:log-dir ".data/"
-    :env {}}
-   simple-algo))
+  (-> (dag/create-dag {:log-dir ".data/"
+                        :env {}})
+       (algo/add-env-time-live)
+       (algo/add-algo simple-algo)))
 
 (dag/start-log-cell simple-rt2 :algo)
 (dag/stop-all! simple-rt2)

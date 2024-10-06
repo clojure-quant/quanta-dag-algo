@@ -1,4 +1,4 @@
-(ns dev.dag-live
+(ns dev.dag.dag-live
   (:require
    [missionary.core :as m]
    [quanta.dag.core :as dag]

@@ -19,30 +19,34 @@
 (defn- add-cells [d time-fn cell-spec]
   (doall (map #(add-cell d time-fn %) cell-spec)))
 
-(defn create-dag-live
+
+(defn add-env-time-live
   "creates a dag from an algo-spec
    time-events are generated live with the passing of time."
-  [dag-env algo-spec]
-  (let [time-fn live-calendar
-        cell-spec (spec->ops algo-spec)
-        d (dag/create-dag dag-env)]
-    (write-edn-raw (:logger d) "mode: live\r\nalgo-spec:" cell-spec)
-    (add-cells d time-fn cell-spec)
-    (assoc d :time-fn time-fn :dt-mode :live)))
+  [dag]
+  (let [time-fn live-calendar]
+     (write-edn-raw (:logger dag) "\r\ntime-mode" {:dt-mode :live})
+    (assoc dag :time-fn time-fn :dt-mode :live)))
 
-(defn create-dag-snapshot
+(defn add-env-time-snapshot
   "creates a dag from an algo-spec
    time-events are generated once per calendar as of the date-time of 
    the last close of each calendar."
-  [dag-env algo-spec dt]
-  (let [time-fn (calculate-calendar dt)
-        cell-spec (spec->ops algo-spec)
-        d (dag/create-dag dag-env)]
-    (write-edn-raw (:logger d) "mode: snapshot\r\nalgo-spec:" cell-spec)
-    (add-cells d time-fn cell-spec)
-    (assoc d :time-fn time-fn :dt-mode dt)))
+  [dag dt]
+  (let [time-fn (calculate-calendar dt)]
+    (write-edn-raw (:logger dag) "\r\ntime-mode" {:dt-mode dt})
+    (assoc dag :time-fn time-fn :dt-mode dt)))
 
-(defn calculate-cell-once
+(defn add-algo [dag algo-spec]
+  (let [cell-spec (spec->ops algo-spec)
+        {:keys [time-fn]} dag]
+    (assert time-fn "algo can only be added after time-env has been set")
+    (write-edn-raw (:logger dag) "\r\nadded-algo" cell-spec)
+    (add-cells dag time-fn cell-spec)
+    dag))
+
+
+#_(defn calculate-cell-once
   "creates a snapshot dag as of dt from an algo spec, 
    and calculates and returns cell-id"
   [dag-env algo-spec dt cell-id]

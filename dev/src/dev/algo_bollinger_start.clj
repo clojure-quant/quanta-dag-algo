@@ -3,7 +3,7 @@
    [tick.core :as t]
    [quanta.dag.core :as dag]
    [quanta.algo.env.bars]
-   [quanta.algo.core :refer [create-dag-live create-dag-snapshot]]
+   [quanta.algo.core :as algo]
    [ta.import.provider.bybit.ds :as bybit]
    [ta.db.bars.protocol :as b]
    [ta.calendar.core :refer [trailing-window]]
@@ -17,11 +17,11 @@
 ;; SNAPSHOT
 
 (def bollinger
-  (create-dag-snapshot
-   {:log-dir ".data/"
-    :env env}
-   bollinger-algo
-   (t/instant)))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env env})
+      (algo/add-env-time-snapshot (t/instant))
+      (algo/add-algo bollinger-algo)))
+
 
 (dag/cell-ids bollinger)
 
@@ -35,11 +35,12 @@
 
 ;; LIVE
 
+
 (def bollinger-rt
-  (create-dag-live
-   {:log-dir ".data/"
-    :env env}
-   bollinger-algo))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env env})
+      (algo/add-env-time-live)
+      (algo/add-algo bollinger-algo)))
 
 (dag/cell-ids bollinger-rt)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)

@@ -2,17 +2,16 @@
   (:require
    [tick.core :as t]
    [quanta.dag.core :as dag]
-   [quanta.algo.core :as create]
+   [quanta.algo.core :as algo]
    [dev.algo-multi :refer [multi-algo]]))
 
 ;; SNAPSHOT ************************************************************
 
 (def multi
-  (create/create-dag-snapshot
-   {:log-dir ".data/"
-    :env {}}
-   multi-algo
-   (t/instant)))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env {}})
+      (algo/add-env-time-snapshot (t/instant))
+      (algo/add-algo multi-algo)))
 
 (dag/cell-ids multi)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)
@@ -34,10 +33,10 @@
 ;; LIVE ****************************************************************
 
 (def multi-rt
-  (create/create-dag-live
-   {:log-dir ".data/"
-    :env {}}
-   multi-algo))
+  (-> (dag/create-dag {:log-dir ".data/"
+                       :env {}})
+      (algo/add-env-time-live)
+      (algo/add-algo multi-algo)))
 
 ; you just start whatever you want to log.
 ; you can start :signal only, which automatically will calculate

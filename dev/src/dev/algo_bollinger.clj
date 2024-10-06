@@ -7,8 +7,7 @@
    [quanta.dag.env :refer [log]]
    [quanta.algo.env.bars :refer [get-trailing-bars]]
    [quanta.algo.dag.spec :refer [spec->ops]]
-   [quanta.algo.options :refer [apply-options]]
-   [quanta.trade.backtest :refer [backtest]]))
+   [quanta.algo.options :refer [apply-options]]))
 
 (defn entry-one [long short]
   (cond
@@ -54,13 +53,7 @@
          :atr-k 0.3}
    :stats {:formula [:day :min]
            :algo bollinger-stats
-           :carry-n 2}
-   :backtest {:formula [:day]
-              :algo backtest
-              :entry [:fixed-amount 100000]
-              :exit [:loss-percent 2.0
-                     :profit-percent 1.0
-                     :time 5]}])
+           :carry-n 2}])
 
 (spec->ops bollinger-algo)
 ;; => [[:day {:calendar [:forex :d],
