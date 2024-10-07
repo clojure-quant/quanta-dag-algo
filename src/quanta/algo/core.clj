@@ -44,9 +44,3 @@
     (add-cells dag time-fn cell-spec)
     dag))
 
-#_(defn calculate-cell-once
-    "creates a snapshot dag as of dt from an algo spec, 
-   and calculates and returns cell-id"
-    [dag-env algo-spec dt cell-id]
-    (let [d (create-dag-snapshot dag-env algo-spec dt)]
-      (dag/get-current-valid-value d cell-id)))
