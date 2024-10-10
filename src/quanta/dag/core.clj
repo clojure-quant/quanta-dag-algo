@@ -85,6 +85,18 @@
 ;  (catch AssertionError ex (create-error spec ex))
 ;  (catch Exception ex (create-error spec ex)))
 
+(defn add-formula-raw-cell [dag cell-id formula-raw-fn input-cell-id-vec]
+  (assert dag "dag needs to be non nil")
+  (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
+  (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
+        _ (println "all input cells are good! input-cells: " input-cells)
+        formula-cell-raw (formula-raw-fn dag input-cells)]
+    (add-cell dag cell-id formula-cell-raw)))
+
+(defn calculate [dag formula-fn args]
+  (with-bindings (:env dag)
+    (apply formula-fn args)))
+
 (defn add-formula-cell [dag cell-id formula-fn input-cell-id-vec]
   (assert dag "dag needs to be non nil")
   (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
@@ -95,8 +107,8 @@
                                (create-no-val cell-id)
                                (try
                                  (let [start (. System (nanoTime))
-                                       result (with-bindings (:env dag)
-                                                (apply formula-fn args))
+                                       ;`result (calculate dag formula-fn args)
+                                       result (m/? (m/via m/cpu (calculate dag formula-fn args)))
                                        stime (str "\r\ncell " cell-id
                                                   " calculated in "
                                                   (/ (double (- (. System (nanoTime)) start)) 1000000.0)

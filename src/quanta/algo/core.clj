@@ -5,19 +5,7 @@
    [quanta.algo.dag.calendar.core :refer [live-calendar calculate-calendar]]
    [quanta.algo.dag.spec :refer [spec->ops]]))
 
-(defn- add-cell [d time-fn [cell-id {:keys [calendar formula
-                                            algo-fn opts]}]]
-  (let [algo-fn-with-opts (partial algo-fn opts)]
-    (cond
-      calendar
-      (do (dag/add-cell d calendar (time-fn calendar))
-          (dag/add-formula-cell d cell-id algo-fn-with-opts [calendar]))
-
-      formula
-      (dag/add-formula-cell d cell-id algo-fn-with-opts formula))))
-
-(defn- add-cells [d time-fn cell-spec]
-  (doall (map #(add-cell d time-fn %) cell-spec)))
+;; environment
 
 (defn add-env-time-live
   "creates a dag from an algo-spec
@@ -36,6 +24,25 @@
     (write-edn-raw (:logger dag) "\r\ntime-mode" {:dt-mode dt})
     (assoc dag :time-fn time-fn :dt-mode dt)))
 
+;; algo
+
+(defn- add-cell [d time-fn [cell-id {:keys [calendar formula formula-raw
+                                            algo-fn opts]}]]
+  (let [algo-fn-with-opts (partial algo-fn opts)]
+    (cond
+      calendar
+      (do (dag/add-cell d calendar (time-fn calendar))
+          (dag/add-formula-cell d cell-id algo-fn-with-opts [calendar]))
+
+      formula
+      (dag/add-formula-cell d cell-id algo-fn-with-opts formula)
+
+      formula-raw
+      (dag/add-formula-raw-cell d cell-id algo-fn-with-opts formula-raw))))
+
+(defn- add-cells [d time-fn cell-spec]
+  (doall (map #(add-cell d time-fn %) cell-spec)))
+
 (defn add-algo [dag algo-spec]
   (let [cell-spec (spec->ops algo-spec)
         {:keys [time-fn]} dag]
@@ -43,4 +50,7 @@
     (write-edn-raw (:logger dag) "\r\nadded-algo" cell-spec)
     (add-cells dag time-fn cell-spec)
     dag))
+
+
+
 

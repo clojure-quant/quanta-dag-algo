@@ -13,6 +13,7 @@
       (algo/add-env-time-snapshot (t/instant))
       (algo/add-algo multi-algo)))
 
+
 (dag/cell-ids multi)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)
 
@@ -22,6 +23,12 @@
 (dag/start-log-cell multi :day)
 (dag/start-log-cell multi :min)
 (dag/start-log-cell multi :signal)
+(dag/start-log-cell multi :signal2)
+
+
+
+
+
 
 ; for a snapshot calculation, the task calculation is so fast,
 ; that most likely all tasks are already terminated, so the 

@@ -1,5 +1,6 @@
 (ns dev.algo-multi
   (:require
+   [missionary.core :as m]
    [quanta.dag.env :refer [log]]
    [quanta.algo.options :refer [apply-options]]
    [quanta.algo.dag.spec :refer [spec->ops]]))
@@ -16,6 +17,16 @@
   (log "** multi-signal " {:day d :min m})
   (vector d m))
 
+(defn multi-signal-raw [opts dag input-cells]
+  (println "creating multi-signal-raw cell: " opts "input cells: " input-cells)
+  (let [formula-fn (fn [d m]
+                       (println "** multi-signal-raw " {:day d :min m})
+                       (vector d m))
+      formula-cell (apply m/latest formula-fn input-cells)]
+    (m/signal formula-cell)))
+
+
+
 (def multi-algo
   [{:asset "BTCUSDT"} ; this options are global
    :day {:calendar [:crypto :d]
@@ -26,9 +37,16 @@
          :y 5}
    :signal {:formula [:day :min]
             :algo multi-signal
-            :z 27}])
+            :z 27}
+   :signal2 {:formula-raw [:day :min]
+            :algo multi-signal-raw
+            :z 27}
+   
+   ])
+
 
 (spec->ops multi-algo)
+
 ;; => [[:day
 ;;      {:calendar [:crypto :d],
 ;;       :algo-fn #function[dev.algo-multi/multi-calc],

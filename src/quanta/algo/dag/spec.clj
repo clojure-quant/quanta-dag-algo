@@ -1,7 +1,7 @@
 (ns quanta.algo.dag.spec)
 
 (defn spec->op [spec]
-  (let [{:keys [calendar formula value]} spec]
+  (let [{:keys [calendar formula formula-raw value]} spec]
     (cond
       ; time-algo
       calendar
@@ -11,6 +11,10 @@
       ; formula (uses other cells)
       formula
       {:formula formula
+       :algo-fn (:algo spec)
+       :opts (dissoc spec :algo)}
+      formula-raw
+      {:formula-raw formula-raw
        :algo-fn (:algo spec)
        :opts (dissoc spec :algo)}
       ; value (create imput cell)
