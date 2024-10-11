@@ -4,7 +4,7 @@
    [nano-id.core :refer [nano-id]]
    [quanta.dag.core :as dag]
    [quanta.algo.options :as algo-opts]
-   [quanta.algo.core :as create]))
+   [quanta.algo.core :as algo]))
 
 ;; TEMPLATE INFO
 
@@ -138,9 +138,9 @@
   [dag-env template viz-mode dt]
   (info "creating algo-dag..")
   (let [algo (:algo template)
-        d (create/create-dag-snapshot dag-env algo dt)]
-
+        d (-> (dag/create-dag dag-env #_{:log-dir ".data/" :env env})
+              (algo/add-env-time-snapshot dt)
+              (algo/add-algo algo))]
     (add-viz-cell d template viz-mode)
     (info "waiting for viz result.. ")
     (dag/get-current-valid-value d :viz)))
-
