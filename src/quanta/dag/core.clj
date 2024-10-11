@@ -89,7 +89,7 @@
   (assert dag "dag needs to be non nil")
   (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
   (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
-        _ (println "all input cells are good! input-cells: " input-cells)
+        ;_ (println "all input cells are good! input-cells: " input-cells)
         formula-cell-raw (formula-raw-fn dag input-cells)]
     (add-cell dag cell-id formula-cell-raw)))
 
@@ -101,7 +101,7 @@
   (assert dag "dag needs to be non nil")
   (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
   (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
-        _ (println "all input cells are good!")
+        ;_ (println "all input cells are good!")
         formula-fn-wrapped (fn [& args]
                              (if (some-input-no-value? args)
                                (create-no-val cell-id)
