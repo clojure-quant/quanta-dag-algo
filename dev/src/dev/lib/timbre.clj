@@ -1,4 +1,4 @@
-(ns dev.timbre
+(ns dev.lib.timbre
   (:require
    [taoensso.telemere :as t]))
 

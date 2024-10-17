@@ -39,9 +39,9 @@
 
 (def simple-rt2
   (-> (dag/create-dag {:log-dir ".data/"
-                        :env {}})
-       (algo/add-env-time-live)
-       (algo/add-algo simple-algo)))
+                       :env {}})
+      (algo/add-env-time-live)
+      (algo/add-algo simple-algo)))
 
 (dag/start-log-cell simple-rt2 :algo)
 (dag/stop-all! simple-rt2)

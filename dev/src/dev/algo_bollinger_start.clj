@@ -22,7 +22,6 @@
       (algo/add-env-time-snapshot (t/instant))
       (algo/add-algo bollinger-algo)))
 
-
 (dag/cell-ids bollinger)
 
 (dag/start-log-cell bollinger [:crypto :d])
@@ -34,7 +33,6 @@
 (dag/running-tasks bollinger)
 
 ;; LIVE
-
 
 (def bollinger-rt
   (-> (dag/create-dag {:log-dir ".data/"

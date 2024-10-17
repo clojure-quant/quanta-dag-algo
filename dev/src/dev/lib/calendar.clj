@@ -1,4 +1,4 @@
-(ns dev.calendar
+(ns dev.lib.calendar
   (:require
    [ta.calendar.core :as cal]
    [tick.core :as t]))

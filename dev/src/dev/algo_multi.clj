@@ -20,12 +20,10 @@
 (defn multi-signal-raw [opts dag input-cells]
   (println "creating multi-signal-raw cell: " opts "input cells: " input-cells)
   (let [formula-fn (fn [d m]
-                       (println "** multi-signal-raw " {:day d :min m})
-                       (vector d m))
-      formula-cell (apply m/latest formula-fn input-cells)]
+                     (println "** multi-signal-raw " {:day d :min m})
+                     (vector d m))
+        formula-cell (apply m/latest formula-fn input-cells)]
     (m/signal formula-cell)))
-
-
 
 (def multi-algo
   [{:asset "BTCUSDT"} ; this options are global
@@ -39,11 +37,8 @@
             :algo multi-signal
             :z 27}
    :signal2 {:formula-raw [:day :min]
-            :algo multi-signal-raw
-            :z 27}
-   
-   ])
-
+             :algo multi-signal-raw
+             :z 27}])
 
 (spec->ops multi-algo)
 
