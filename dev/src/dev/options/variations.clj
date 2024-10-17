@@ -77,3 +77,9 @@
 ;; => ([{:asset "BTCUSDT"} :day {:calendar [:crypto :d], :algo :bollinger-calc-fn, :trailing-n 800, :atr-n 5, :atr-k 0.6}]
 ;;     [{:asset "BTCUSDT"} :day {:calendar [:crypto :d], :algo :bollinger-calc-fn, :trailing-n 800, :atr-n 10, :atr-k 0.6}])
 
+(o/variation-keys {[2 :atr-n] [5 10]
+                   [:asset] [:eth :btc]})
+
+(o/variation-keys [[2 :atr-n] [5 10]
+                   [:asset] [:eth :btc]])
+

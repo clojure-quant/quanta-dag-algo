@@ -85,6 +85,12 @@
   (let [option-seq (make-variations variation-spec)]
     (map (partial apply-options algo) option-seq)))
 
+(defn variation-keys [variation-spec]
+  (if (map? variation-spec)
+    (keys variation-spec)
+    (->> (partition 2 variation-spec)
+         (map first))))
+
 (comment
 
   ;; VARIATIONS
