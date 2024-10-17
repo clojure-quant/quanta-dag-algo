@@ -69,7 +69,10 @@
   ;;     {:x 3, :y :c, :debug true}
   ;;     {:x 3, :y :c, :debug false})"
   [variation-spec]
-  (let [key-seq-tuples (partition 2 variation-spec)]
+  (let [key-seq-tuples
+        (if (map? variation-spec)
+          (map concat variation-spec)
+          (partition 2 variation-spec))]
     (map-keys {} key-seq-tuples)))
 
 (defn create-algo-variations
@@ -84,20 +87,6 @@
 
 (comment
 
-  ; SET OPTIONS
-
-  (apply-options {:algo {:x 1
-                         :y 2
-                         :users {:w "walter"}}}
-                 {:x 5
-                  [:users :w] "willy"})
-
-  (apply-options {:algo {:x 1
-                         :y 2
-                         :users {:w "walter"}}}
-                 {:x 5
-                  [:users :w] "willy"})
-
   ;; VARIATIONS
 
   (add-key {:calendar [:us :d]}
@@ -106,41 +95,7 @@
             [[:asset ["a" "b" "c"]]
              [:n [100 500 1000]]])
 
-  (make-variations [:x [1 2 3]
-                    :y [:a :b :c]])
-    ;; => ({:x 1, :y :a}
-    ;;     {:x 1, :y :b}
-    ;;     {:x 1, :y :c}
-    ;;     {:x 2, :y :a}
-    ;;     {:x 2, :y :b}
-    ;;     {:x 2, :y :c}
-    ;;     {:x 3, :y :a}
-    ;;     {:x 3, :y :b}
-    ;;     {:x 3, :y :c})
-
-  (make-variations [:x [1 2 3]
-                    :y [:a :b :c]
-                    :debug [true false]])
-  ;; => ({:x 1, :y :a, :debug true}
-  ;;     {:x 1, :y :a, :debug false}
-  ;;     {:x 1, :y :b, :debug true}
-  ;;     {:x 1, :y :b, :debug false}
-  ;;     {:x 1, :y :c, :debug true}
-  ;;     {:x 1, :y :c, :debug false}
-  ;;     {:x 2, :y :a, :debug true}
-  ;;     {:x 2, :y :a, :debug false}
-  ;;     {:x 2, :y :b, :debug true}
-  ;;     {:x 2, :y :b, :debug false}
-  ;;     {:x 2, :y :c, :debug true}
-  ;;     {:x 2, :y :c, :debug false}
-  ;;     {:x 3, :y :a, :debug true}
-  ;;     {:x 3, :y :a, :debug false}
-  ;;     {:x 3, :y :b, :debug true}
-  ;;     {:x 3, :y :b, :debug false}
-  ;;     {:x 3, :y :c, :debug true}
-  ;;     {:x 3, :y :c, :debug false})
-
-    ; option-ui => algo
+; option-ui => algo
   (def paths [:a [:b :c] :d])
   (def data [{:a 1 :b {:c 22 :x 5} :d 55}
              {:x 1 :i {:y 2 :x 5} :d 55}])
