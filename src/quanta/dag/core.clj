@@ -176,7 +176,7 @@
   "gets the first non-nil value from the flow"
   [f]
   (m/reduce (fn [r v]
-              (println "current v: " v " r: " r)
+              ;(println "current v: " v " r: " r)
               v) nil
             (take-first-non-noval f)))
 
