@@ -13,7 +13,7 @@
    in a vector."
   [template]
   (let [views (-> template
-                  (dissoc :id :options :algo)
+                  (dissoc :id :options :algo :md)
                   (keys)
                   sort)]
     (->> views
