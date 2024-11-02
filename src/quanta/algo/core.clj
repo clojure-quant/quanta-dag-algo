@@ -27,15 +27,17 @@
 ;; algo
 
 (defn- add-cell [d time-fn [cell-id {:keys [calendar formula formula-raw
-                                            algo-fn opts]}]]
+                                            algo-fn opts
+                                            sp?]
+                                     :or {sp?  false}}]]
   (let [algo-fn-with-opts (partial algo-fn opts)]
     (cond
       calendar
       (do (dag/add-cell d calendar (time-fn calendar))
-          (dag/add-formula-cell d cell-id algo-fn-with-opts [calendar]))
+          (dag/add-formula-cell d cell-id algo-fn-with-opts [calendar] sp?))
 
       formula
-      (dag/add-formula-cell d cell-id algo-fn-with-opts formula)
+      (dag/add-formula-cell d cell-id algo-fn-with-opts formula sp?)
 
       formula-raw
       (dag/add-formula-raw-cell d cell-id algo-fn-with-opts formula-raw))))

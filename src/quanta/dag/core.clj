@@ -30,6 +30,13 @@
 (defn cell-ids [dag]
   (-> @(:cells dag) keys))
 
+(defn- get-cell-or-throw [dag cell-id]
+  (let [cell (get-cell dag cell-id)]
+    (when-not cell
+      (throw (ex-info "cell-not-found" {:cell-id cell-id
+                                        :msg "cell not found in dag."})))
+    cell))
+
 #_(defn- msg-flow [!-a]
     (m/observe
      (fn [!]
@@ -49,7 +56,10 @@
                  (! v)))}))
 
 (defn add-constant-cell [dag cell-id initial-v]
-  (add-cell dag cell-id (m/seed [initial-v])))
+  (add-cell dag cell-id (m/signal (m/seed [initial-v]))))
+
+(defn add-atom-cell [dag cell-id a]
+  (add-cell dag cell-id (m/signal (m/watch a))))
 
 #_(defn add-input-cell [dag cell-id initial-v]
     (let [{:keys [flow send]} (flow-sender initial-v)]
@@ -61,23 +71,6 @@
     (if-let [send-fn (get @(:inputs dag) cell-id)]
       (send-fn new-v)
       (throw (ex-info "cannot modify non-existing input cell" {:cell-id cell-id}))))
-
-(defn- get-cell-or-throw [dag cell-id]
-  (let [cell (get-cell dag cell-id)]
-    (when-not cell
-      (throw (ex-info "cell-not-found" {:cell-id cell-id
-                                        :msg "cell not found in dag."})))
-    cell))
-
-(defn some-input-no-value? [args]
-  (some is-no-val? args))
-
-(comment
-  (some-input-no-value? [1 2 3])
-  (some-input-no-value? [1 2 3 nil])
-  (some-input-no-value? [1 2 3 nil (create-no-val :34)])
- ; 
-  )
 
 ;(try
 ;      ;(warn "run-algo-safe else.. fn: " algo-fn)
@@ -93,37 +86,64 @@
         formula-cell-raw (formula-raw-fn dag input-cells)]
     (add-cell dag cell-id formula-cell-raw)))
 
-(defn calculate [dag formula-fn args]
-  (with-bindings (:env dag)
-    (apply formula-fn args)))
+(defn calculate [dag cell-id formula-fn args]
+  ;(println "calculating  " cell-id " args: " args)
+  (let [r (with-bindings (assoc (:env dag)
+                                #'quanta.dag.env/*cell-id* cell-id)
+            (apply formula-fn args))]
+    ;(println "calc r: " r)
+    r))
 
-(defn add-formula-cell [dag cell-id formula-fn input-cell-id-vec]
+(defn some-input-no-value? [args]
+  (some is-no-val? args))
+
+(comment
+  (some-input-no-value? [1 2 3])
+  (some-input-no-value? [1 2 3 nil])
+  (some-input-no-value? [1 2 3 nil (create-no-val :34)])
+ ; 
+  )
+
+(defn add-formula-cell [dag cell-id formula-fn input-cell-id-vec sp?]
   (assert dag "dag needs to be non nil")
   (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
   (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
         ;_ (println "all input cells are good!")
-        formula-fn-wrapped (fn [& args]
-                             (if (some-input-no-value? args)
-                               (create-no-val cell-id)
-                               (try
-                                 (let [start (. System (nanoTime))
+        input-f (apply m/latest vector input-cells)
+        formula-result-f (m/ap
+                          (m/amb (create-no-val cell-id))
+                          (let [args (seq (m/?> input-f))]
+                            ;(println "args: " args "sp?: " sp?)
+                            (if (some-input-no-value? args)
+                              (create-no-val cell-id)
+                              (try
+                                (let [start (. System (nanoTime))
                                        ;`result (calculate dag formula-fn args)
-                                       result (m/? (m/via m/cpu (calculate dag formula-fn args)))
-                                       stime (str "\r\ncell " cell-id
-                                                  " calculated in "
-                                                  (/ (double (- (. System (nanoTime)) start)) 1000000.0)
-                                                  " msecs")]
-                                   (when (:logger dag)
-                                     (trace/write-text (:logger dag) stime))
-                                   result)
-                                 (catch Exception ex
-                                   (when (:logger dag)
-                                     (trace/write-ex (:logger dag) cell-id ex))
-                                   (throw ex)))))
-        formula-cell (apply m/latest formula-fn-wrapped input-cells)
-        ;formula-cell-wrapped (m/stream formula-cell)
-        formula-cell-wrapped (m/signal formula-cell)]
-    (add-cell dag cell-id formula-cell-wrapped)))
+                                      ;result (m/? (m/via m/cpu
+                                      ;                   ;(if sp?
+                                      ;                    ; (m/? (calculate dag cell-id formula-fn args))
+                                      ;                     (calculate dag cell-id formula-fn args)))
+                                      ;)
+                                      result (if sp?
+                                               (m/? (calculate dag cell-id formula-fn args))
+                                               (calculate dag cell-id formula-fn args))
+                                      stime (str "\r\ncell " cell-id
+                                                 " calculated in "
+                                                 (/ (double (- (. System (nanoTime)) start)) 1000000.0)
+                                                 " msecs")]
+                                  (when (:logger dag)
+                                    (trace/write-text (:logger dag) stime))
+                                 ;(println "flow result: " result)
+                                  result)
+                                (catch Exception ex
+                                  (when (:logger dag)
+                                    (trace/write-ex (:logger dag) cell-id ex))
+                                  (throw ex))))))
+        formula-result-f-wrapped (->> formula-result-f
+                                      (m/reductions (fn [r v] v) (create-no-val cell-id))
+                                      (m/relieve {})
+                                      (m/signal))]
+    (add-cell dag cell-id formula-result-f-wrapped)))
 
 (defn create-dag
   ([]
@@ -142,9 +162,24 @@
      (assoc dag :env (merge {#'quanta.dag.env/*dag* dag}
                             env)))))
 
+(defn take-first-val [f]
+  ; flows dont implement deref
+  (m/eduction
+   (remove is-no-val?)
+   (take 1)
+   f))
+
+(defn current-v
+  "gets the first valid value from the flow"
+  [f]
+  (m/reduce (fn [r v]
+              (println "current v: " v " r: " r)
+              v) nil
+            (take-first-val f)))
+
 (defn get-current-value [dag cell-id]
   (let [cell (get-cell dag cell-id)]
-    (m/? (util/current-v cell))))
+    (m/? (current-v cell))))
 
 (defn -listen
   ; from ribelo/praxis

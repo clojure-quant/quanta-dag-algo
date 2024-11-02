@@ -15,15 +15,12 @@
     short :short
     :else :flat))
 
-(defn bollinger-calc [opts dt]
-  (println "bollinger-calc dt: " dt " opts: " opts)
-  (log "bollinger-dt: " dt)
+(defn bollinger-calc [opts bar-ds]
   (log "bollinger-opts: " opts)
   (let [n (or (:atr-n opts) 2)
         k (or (:atr-k opts) 1.0)
-        ds-bars (get-trailing-bars opts dt)
         ;_ (log "trailing-bars: " ds-bars) ; for debugging - logs to the dag logfile
-        ds-bollinger (band/add-bollinger {:n n :k k} ds-bars)
+        ds-bollinger (band/add-bollinger {:n n :k k} bar-ds)
         long-signal (cross-up (:close ds-bollinger) (:bollinger-upper ds-bollinger))
         short-signal (cross-up (:close ds-bollinger) (:bollinger-lower ds-bollinger))
         entry (dtype/clone (dtype/emap entry-one :keyword long-signal short-signal))
@@ -41,12 +38,19 @@
 
 (def bollinger-algo
   [{:asset "BTCUSDT"} ; this options are global
-   :day {:calendar [:crypto :d]
+   :bars-day {:calendar [:crypto :d]
+              :trailing-n 800
+              :algo get-trailing-bars
+              :sp? true}
+   :day {:formula [:bars-day]
          :algo  bollinger-calc
-         :trailing-n 800
          :atr-n 10
          :atr-k 0.6}
-   :min {:calendar [:crypto :m]
+   :bars-min {:calendar [:crypto :m]
+              :trailing-n 20
+              :algo get-trailing-bars
+              :sp? true}
+   :min {:formula [:bars-min]
          :algo bollinger-calc   ; min gets the global option :asset 
          :trailing-n 20         ; on top of its own local options 
          :atr-n 5

@@ -125,7 +125,7 @@
         formula-fn (partial viz viz-options)]
     (assert (dag/get-cell d key) (str "dag does not contain viz cell: " key))
     (info "adding viz-cell... ")
-    (dag/add-formula-cell d :viz formula-fn [key])))
+    (dag/add-formula-cell d :viz formula-fn [key] false)))
 
 (defn calculate
   "this runs a viz-task once and returns the viz-result.

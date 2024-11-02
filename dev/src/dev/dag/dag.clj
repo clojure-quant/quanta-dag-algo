@@ -5,19 +5,64 @@
    [quanta.dag.core :as dag]
    [quanta.dag.util :as util2]))
 
+(def a (atom 12))
+
+(defn mult-task [a b]
+  (m/sp
+   (println "fast mult!")
+   (* a b)))
+
+(defn slow-mult-task [a b]
+  (m/sp
+   (println "mult-sleep.")
+   (m/? (m/sleep 500))
+   (println "mult-sleep. done!")
+   (* a b)))
+
 (def model
   (-> (dag/create-dag {:log-dir ".data/"})
       (dag/add-constant-cell :a 2)
       (dag/add-constant-cell :b 3)
-      (dag/add-constant-cell :c 5)
-      (dag/add-formula-cell :d + [:a :b])
-      (dag/add-formula-cell :e * [:c :d])
-      (dag/add-formula-cell :f * [:e :d :a :b])))
+      (dag/add-atom-cell :c a)
+      (dag/add-formula-cell :ab + [:a :b] false)
+      (dag/add-formula-cell :ac mult-task [:c :a] true)
+      (dag/add-formula-cell :ac2 slow-mult-task [:c :a] true)
+      (dag/add-formula-cell :abc * [:c :ab] false)
+      (dag/add-formula-cell :ababc * [:ab :abc] false)))
 
 (dag/get-current-value model :a)
 (dag/get-current-value model :b)
-(dag/get-current-value model :d)
+(dag/get-current-value model :c)
+(dag/get-current-value model :ab)
+(dag/get-current-value model :ac)
+
+(dag/get-current-value model :abc)
+(dag/get-current-value model :ababc)
+(dag/get-current-value model :ac2)
+
+(dag/get-cell model :ababc)
+
+(defn current-v
+  "gets the first valid value from the flow"
+  [f]
+  (m/reduce (fn [r v]
+              (println "current v: " v " r: " r)
+              v) nil
+            (m/eduction
+            ;(remove dag/is-no-val?)
+             (take 1)
+             f)))
+
+(-> (m/? (current-v (dag/get-cell model :ac)))
+    ;type
+    class)
+
+(m/? (current-v (dag/get-cell model :a)))
+
+(dag/get-cell model :e)
+
 (dag/get-current-value model :e)
+
 (dag/get-current-value model :f)
 
 (def dt-every-10-seconds
@@ -40,12 +85,12 @@
       (dag/add-constant-cell :asset "QQQ")
       (dag/add-constant-cell :asset2 "QQQ")
       (dag/add-formula-cell :assets (fn [asset1 asset2]
-                                      [asset1 asset2]) [:asset :asset2])
+                                      [asset1 asset2]) [:asset :asset2] false)
       (dag/add-cell :dt dt-every-10-seconds)
       (dag/add-formula-cell :quote (fn [asset dt]
                                      {:asset asset
                                       :dt dt
-                                      :price (rand 100)}) [:asset :dt])))
+                                      :price (rand 100)}) [:asset :dt] false)))
 
 (dag/cell-ids dag-rt)
 
