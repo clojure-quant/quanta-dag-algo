@@ -39,8 +39,8 @@
 (def bollinger-algo
   [{:asset "BTCUSDT"} ; this options are global
    :bars-day {:calendar [:crypto :d]
-              :trailing-n 800
               :algo get-trailing-bars
+              :trailing-n 800
               :sp? true}
    :day {:formula [:bars-day]
          :algo  bollinger-calc
