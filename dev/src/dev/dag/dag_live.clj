@@ -16,7 +16,7 @@
                                      (log "I go into the dag log" {:message "super"})
                                      {:asset asset
                                       :dt dt
-                                      :price (rand 100)}) [:asset :dt])))
+                                      :price (rand 100)}) [:asset :dt] false)))
 
 (dag/start-log-cell dag-rt :dt)
 (dag/start-log-cell dag-rt :quote)
@@ -42,7 +42,7 @@ bar-db
       (dag/add-formula-cell :bars (fn [opts dt]
                                     {:asset (:asset opts)
                                      :dt dt
-                                     :bars (get-trailing-bars opts dt)}) [:opts :dt])))
+                                     :bars (get-trailing-bars opts dt)}) [:opts :dt] false)))
 
 dag-rt-bars
 
