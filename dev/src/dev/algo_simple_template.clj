@@ -2,64 +2,68 @@
   (:require
    [tick.core :as t]
    [quanta.algo.template :as templ]
-   [quanta.dag.env :refer [log]]
    [dev.algo-simple :refer [simple-algo]]))
 
-(defn viz-print [env opts data]
-  (log env "calculating viz-fn with data: " data)
+(defn viz-print [opts data]
   {:creator "viz-print"
    :data data
    :viz-opts opts})
 
 (def simple-template
   {:id :simple
-   :fn simple-algo
+   :algo simple-algo
    :options [{:type :select
-              :path [:x]
+              :path [:* :x]
               :name "x param"
               :spec [200 500 1000 2000]}
              {:type :string
-              :path [:z]
+              :path [:algo :z]
               :name "z param (with coercion)"
               :coerce :double}]
    :print {:viz viz-print
+           :key :algo
            :viz-options {:print-mode :simple}}})
 
 ; this is called from the web-ui upon selecting a template
 (templ/template-info simple-template)
+;; => {:options
+;;     [{:type :select, :path [:* :x], :name "x param", :spec [200 500 1000 2000]}
+;;      {:type :string, :path [:algo :z], :name "z param (with coercion)", :coerce :double}],
+;;     :current {[:* :x] 3, [:algo :z] nil},
+;;     :views [:select-viz :print]}
 
-(templ/apply-options simple-template {[:x] 18})
+(templ/apply-options simple-template {[:* :x] 18})
 ;; => {:id :simple,
-;;     :algo {:calendar [:crypto :m], :algo #function[dev.algo-simple/simple-calc], :x 18, :y :b, :z nil},
+;;     :algo {:* {:x 18}, :algo {:calendar [:crypto :m], :fn #function[dev.algo-simple/simple-calc], :y :b, :z nil}},
 ;;     :options
-;;     [{:type :select, :path [:x], :name "x param", :spec [200 500 1000 2000]}
-;;      {:type :string, :path [:z], :name "z param (with coercion)", :coerce :double}],
+;;     [{:type :select, :path [:* :x], :name "x param", :spec [200 500 1000 2000]}
+;;      {:type :string, :path [:algo :z], :name "z param (with coercion)", :coerce :double}],
 ;;     :print {:viz #function[dev.algo-simple-template/viz-print], :viz-options {:print-mode :simple}}}
 
 ; coercion not enabled
-(templ/apply-options simple-template {[:z] "15.333"})
+(templ/apply-options simple-template {[:algo :z] "15.333"})
 ;; => {:id :simple,
-;;     :algo {:calendar [:crypto :m], :algo #function[dev.algo-simple/simple-calc], :x 3, :y :b, :z "15.333"},
+;;     :algo {:* {:x 3}, :algo {:calendar [:crypto :m], :fn #function[dev.algo-simple/simple-calc], :y :b, :z "15.333"}},
 ;;     :options
-;;     [{:type :select, :path [:x], :name "x param", :spec [200 500 1000 2000]}
-;;      {:type :string, :path [:z], :name "z param (with coercion)", :coerce :double}],
+;;     [{:type :select, :path [:* :x], :name "x param", :spec [200 500 1000 2000]}
+;;      {:type :string, :path [:algo :z], :name "z param (with coercion)", :coerce :double}],
 ;;     :print {:viz #function[dev.algo-simple-template/viz-print], :viz-options {:print-mode :simple}}}
 
-(templ/apply-options simple-template {[:z] "15.333"} true)
+(templ/apply-options simple-template {[:algo :z] "15.333"} true)
 ;; => {:id :simple,
-;;     :algo {:calendar [:crypto :m], :algo #function[dev.algo-simple/simple-calc], :x 3, :y :b, :z 15.333},
+;;     :algo {:* {:x 3}, :algo {:calendar [:crypto :m], :fn #function[dev.algo-simple/simple-calc], :y :b, :z 15.333}},
 ;;     :options
-;;     [{:type :select, :path [:x], :name "x param", :spec [200 500 1000 2000]}
-;;      {:type :string, :path [:z], :name "z param (with coercion)", :coerce :double}],
+;;     [{:type :select, :path [:* :x], :name "x param", :spec [200 500 1000 2000]}
+;;      {:type :string, :path [:algo :z], :name "z param (with coercion)", :coerce :double}],
 ;;     :print {:viz #function[dev.algo-simple-template/viz-print], :viz-options {:print-mode :simple}}}
 
-(templ/apply-options simple-template {[:z] "15.333"
-                                      [:x] 27} true)
+(templ/apply-options simple-template {[:algo :z] "15.333"
+                                      [:* :x] 27} true)
 ;; => {:id :simple,
-;;     :algo {:calendar [:crypto :m], :algo #function[dev.algo-simple/simple-calc], :x 27, :y :b, :z 15.333},
+;;     :algo {:* {:x 27}, :algo {:calendar [:crypto :m], :fn #function[dev.algo-simple/simple-calc], :y :b, :z 15.333}},
 ;;     :options
-;;     [{:type :select, :path [:x], :name "x param", :spec [200 500 1000 2000]}
-;;      {:type :string, :path [:z], :name "z param (with coercion)", :coerce :double}],
+;;     [{:type :select, :path [:* :x], :name "x param", :spec [200 500 1000 2000]}
+;;      {:type :string, :path [:algo :z], :name "z param (with coercion)", :coerce :double}],
 ;;     :print {:viz #function[dev.algo-simple-template/viz-print], :viz-options {:print-mode :simple}}}
 
 (templ/calculate
@@ -69,8 +73,9 @@
  :print
  (t/instant))
 ;; => {:creator "viz-print",
-;;     :data {:result #time/zoned-date-time "2024-10-03T00:21Z[UTC]", :opts {:calendar [:crypto :m], :x 3, :y :b, :z nil}},
+;;     :data {:result #time/zoned-date-time "2024-11-03T19:03Z[UTC]", :opts {:x 3, :y :b, :z nil, :calendar [:crypto :m]}},
 ;;     :viz-opts {:print-mode :simple}}
+
 
 
 

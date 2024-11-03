@@ -110,8 +110,8 @@
 (dag/get-current-value dag-rt :assets)
 (dag/get-current-value dag-rt :dt)
 
-(dag/get-current-valid-value dag-rt :dt)
-(dag/get-current-valid-value dag-rt :quote)
+(dag/get-current-value dag-rt :dt)
+(dag/get-current-value dag-rt :quote)
 
 (dag/start-log-cell dag-rt :dt)
 (dag/start-log-cell dag-rt :quote)

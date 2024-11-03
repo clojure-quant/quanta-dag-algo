@@ -121,12 +121,16 @@
   (let [mode (get template viz-mode)
         _ (assert mode (str "viz key " viz-mode " not found."))
         {:keys [viz viz-options key]
-         :or {key :algo}} mode
-        formula-fn (partial viz viz-options)]
+         :or {key :algo
+              viz-options {}}} mode
+        cell-spec {:fn viz
+                   :input [key]
+                   :opts viz-options
+                   :env? false
+                   :sp? false}]
     (assert (dag/get-cell d key) (str "dag does not contain viz cell: " key))
-    (info "adding viz-cell... ")
-    (dag/add-formula-cell d :viz {:fn formula-fn
-                                  :input [key]})))
+    (info "adding viz-cell " cell-spec)
+    (dag/add-formula-cell d :viz cell-spec)))
 
 (defn calculate
   "this runs a viz-task once and returns the viz-result.
@@ -138,10 +142,10 @@
    dt: the as-of-date-time"
   [dag-env template viz-mode dt]
   (info "creating algo-dag..")
-  (let [algo (:algo template)
+  (let [algo (:algo template) ; :cells or :model is a better name
         d (-> (dag/create-dag dag-env #_{:log-dir ".data/" :env env})
               (algo/add-env-time-snapshot dt)
               (algo/add-algo algo))]
     (add-viz-cell d template viz-mode)
     (info "waiting for viz result.. ")
-    (dag/get-current-valid-value d :viz)))
+    (dag/get-current-value d :viz)))

@@ -58,8 +58,8 @@
 (dag/cell-ids bollinger-rt)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)
 
-(dag/get-current-valid-value bollinger-rt [:crypto :m])
-(dag/get-current-valid-value bollinger-rt :min)
+(dag/get-current-value bollinger-rt [:crypto :m])
+(dag/get-current-value bollinger-rt :min)
 
 (m/? (quanta.bar.env/get-trailing-bars
       env

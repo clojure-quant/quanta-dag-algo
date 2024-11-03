@@ -79,9 +79,9 @@
 ;  (catch AssertionError ex (create-error spec ex))
 ;  (catch Exception ex (create-error spec ex)))
 
-(defn run-fn [dag cell-id {:keys [fn args env? opts]
-                           :or {env? false
-                                opts nil}}]
+(defn- run-fn [dag cell-id {:keys [fn args env? opts]
+                            :or {env? false
+                                 opts nil}}]
   (let [env (assoc (:env dag)
                    :cell-id cell-id)]
     (cond
@@ -97,9 +97,9 @@
       :else
       (apply fn args))))
 
-(defn calculate [dag cell-id {:keys [sp?]
-                              :or {sp? false}
-                              :as opts}]
+(defn- calculate [dag cell-id {:keys [sp?]
+                               :or {sp? false}
+                               :as opts}]
   (m/sp
    ;(t/log! (str "calculate cell-id " cell-id))
    (let [r (run-fn dag cell-id opts)
@@ -133,10 +133,9 @@
 ; 
   )
 
-(defn add-formula-cell [dag cell-id {:keys [input]
-                                     :as opts}]
+(defn add-formula-cell [dag cell-id {:keys [input] :as opts}]
   (assert dag "dag needs to be non nil")
-  (assert (vector? input) "input-cell-id-vec needs to be a vector")
+  (assert (vector? input) "input needs to be a vector")
   (assert (:fn opts) ":fn needs to be defined")
   (assert (fn? (:fn opts)) ":fn needs to be a function")
   (let [input-cells (map #(get-cell-or-throw dag %) input)
@@ -194,14 +193,14 @@
      (assoc dag :env (merge {:dag dag}
                             env)))))
 
-(defn take-first-val [f]
+(defn- take-first-val [f]
   ; flows dont implement deref
   (m/eduction
    (remove is-no-val?)
    (take 1)
    f))
 
-(defn current-v
+(defn- current-v
   "gets the first valid value from the flow"
   [f]
   (m/reduce (fn [r v]
@@ -231,25 +230,6 @@
   [>flow f]
   (m/ap
    (m/?> (m/eduction (comp (map (fn [[e v]] (f e v)))) >flow))))
-
-(defn take-first-non-noval [f]
-  ; flows dont implement deref
-  (m/eduction
-   (remove is-no-val?)
-   (take 1)
-   f))
-
-(defn current-valid-val
-  "gets the first non-nil value from the flow"
-  [f]
-  (m/reduce (fn [r v]
-              ;(println "current v: " v " r: " r)
-              v) nil
-            (take-first-non-noval f)))
-
-(defn get-current-valid-value [dag cell-id]
-  (let [cell (get-cell dag cell-id)]
-    (m/? (current-valid-val cell))))
 
 ;; TASKS
 
