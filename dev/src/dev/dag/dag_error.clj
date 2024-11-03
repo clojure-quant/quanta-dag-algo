@@ -11,20 +11,26 @@
       (dag/add-constant-cell :a 2)
       (dag/add-constant-cell :b 3)
       (dag/add-constant-cell :c 5)
-      (dag/add-formula-cell :d + [:a :b] false)
-      (dag/add-formula-cell :e * [:c :d]  false)
-      (dag/add-formula-cell :f * [:e :d :a :b]  false)
-      (dag/add-formula-cell :g bad-fn [:c :e]  false)))
+      (dag/add-formula-cell :d {:fn +
+                                :input [:a :b]})
+      (dag/add-formula-cell :e {:fn *
+                                :input [:c :d]})
+      (dag/add-formula-cell :f {:fn *
+                                :input [:e :d :a :b]})
+      (dag/add-formula-cell :g {:fn bad-fn
+                                :input [:c :e]})))
 
 (dag/get-current-value model :a)
 (dag/get-current-value model :b)
 (dag/get-current-value model :d)
 (dag/get-current-value model :e)
 (dag/get-current-value model :f)
-;(dag/get-current-value model :g)
+(dag/get-current-value model :g)
 
 ;(get-value-safe model :g)
 ;; => 
+
+
 
 
 

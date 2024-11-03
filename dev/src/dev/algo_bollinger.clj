@@ -1,11 +1,13 @@
 (ns dev.algo-bollinger
   (:require
+   [taoensso.telemere :as t]
+   [missionary.core :as m]
    [tech.v3.datatype :as dtype]
    [tablecloth.api :as tc]
    [ta.indicator.band :as band]
    [ta.indicator.signal :refer [cross-up]]
    [quanta.dag.env :refer [log]]
-   [quanta.algo.env.bars :refer [get-trailing-bars]]
+   [quanta.bar.env :refer [get-trailing-bars]]
    [quanta.algo.dag.spec :refer [spec->ops]]
    [quanta.algo.options :refer [apply-options]]))
 
@@ -15,8 +17,8 @@
     short :short
     :else :flat))
 
-(defn bollinger-calc [opts bar-ds]
-  (log "bollinger-opts: " opts)
+(defn bollinger-calc [env opts bar-ds]
+  (log env "bollinger-opts: " opts)
   (let [n (or (:atr-n opts) 2)
         k (or (:atr-k opts) 1.0)
         ;_ (log "trailing-bars: " ds-bars) ; for debugging - logs to the dag logfile
@@ -36,39 +38,38 @@
      :min-mid min-mid
      :diff (- min-mid day-mid)}))
 
+(defn get-trailing-bars-log [env opts dt]
+  (m/sp
+    ;(t/log! (str "get-trailing-bars dt:" dt " opts: " opts)) 
+   (let [bar-ds (m/? (get-trailing-bars env opts dt))]
+      ;(t/log! (str "get-trailing-bars-ds: " bar-ds)) 
+     (log env "bar-ds: " bar-ds)
+     bar-ds)))
+
 (def bollinger-algo
   [{:asset "BTCUSDT"} ; this options are global
    :bars-day {:calendar [:crypto :d]
-              :algo get-trailing-bars
-              :trailing-n 800
-              :sp? true}
+              :fn get-trailing-bars-log
+              :trailing-n 800}
    :day {:formula [:bars-day]
-         :algo  bollinger-calc
+         :fn  bollinger-calc
+         :env? true
          :atr-n 10
          :atr-k 0.6}
    :bars-min {:calendar [:crypto :m]
-              :trailing-n 20
-              :algo get-trailing-bars
-              :sp? true}
+              :fn get-trailing-bars-log
+              :trailing-n 20}
    :min {:formula [:bars-min]
-         :algo bollinger-calc   ; min gets the global option :asset 
+         :fn bollinger-calc   ; min gets the global option :asset 
+         :env? true
          :trailing-n 20         ; on top of its own local options 
          :atr-n 5
          :atr-k 0.3}
    :stats {:formula [:day :min]
-           :algo bollinger-stats
+           :fn bollinger-stats
            :carry-n 2}])
 
 (spec->ops bollinger-algo)
-;; => [[:day {:calendar [:forex :d],
-;;            :algo-fn #function[dev.bollinger-algo/bollinger-calc],
-;;            :opts {:asset "BTCUSDT", :calendar [:forex :d], :trailing-n 20, :atr-n 10, :atr-m 0.6}}]
-;;     [:min {:calendar [:forex :m],
-;;            :algo-fn #function[dev.bollinger-algo/bollinger-calc],
-;;           :opts {:asset "BTCUSDT", :calendar [:forex :m], :trailing-n 20, :atr-n 5, :atr-m 0.3}}]
-;;     [:signal {:formula [:day :min],
-;;               :algo-fn #function[dev.bollinger-algo/bollinger-signal],
-;;               :opts {:asset "BTCUSDT", :formula [:day :min], :carry-n 2}}]]
 
 (-> bollinger-algo
     (apply-options {[0 :asset] "ETHUSDT"

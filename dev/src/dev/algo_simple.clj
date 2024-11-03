@@ -9,7 +9,7 @@
 
 (def simple-algo
   {:calendar [:crypto :m]
-   :algo  simple-calc
+   :fn  simple-calc
    :x 3
    :y :b
    :z nil})

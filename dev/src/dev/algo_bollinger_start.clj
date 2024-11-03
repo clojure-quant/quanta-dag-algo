@@ -1,18 +1,18 @@
 (ns dev.algo-bollinger-start
   (:require
    [tick.core :as t]
+   [missionary.core :as m]
    [quanta.dag.core :as dag]
-   [quanta.algo.env.bars]
    [quanta.algo.core :as algo]
-   [ta.import.provider.bybit.ds :as bybit]
-   [ta.db.bars.protocol :as b]
+   [quanta.bar.env]
+   [quanta.market.barimport.bybit.import-parallel :as bybit]
    [ta.calendar.core :refer [trailing-window]]
    [dev.algo-bollinger :refer [bollinger-algo]]))
 
 ;; ENV
 
-(def bar-db (bybit/create-import-bybit))
-(def env {#'quanta.algo.env.bars/*bar-db* bar-db})
+(def bar-db (bybit/create-import-bybit-parallel))
+(def env {:bar-db bar-db})
 
 ;; SNAPSHOT
 
@@ -26,6 +26,9 @@
 
 (dag/start-log-cell bollinger [:crypto :d])
 (dag/start-log-cell bollinger [:crypto :m])
+
+(dag/start-log-cell bollinger :bars-day)
+
 (dag/start-log-cell bollinger :day)
 
 (dag/start-log-cell bollinger :min)
@@ -58,19 +61,20 @@
 (dag/get-current-valid-value bollinger-rt [:crypto :m])
 (dag/get-current-valid-value bollinger-rt :min)
 
-(with-bindings [quanta.algo.env.bars/*bar-db* bar-db]
-  (quanta.algo.env.bars/get-trailing-bars
-   {:asset "BTCUSDT"
-    :calendar [:forex :m]
-    :trailing-n 10}
-   (t/instant)))
+(m/? (quanta.bar.env/get-trailing-bars
+      env
+      {:asset "BTCUSDT"
+       :calendar [:forex :m]
+       :trailing-n 10}
+      (t/instant)))
 
-(with-bindings [quanta.algo.env.bars/*bar-db* bar-db]
-  (quanta.algo.env.bars/get-trailing-bars
-   {:asset "BTCUSDT"
-    :calendar [:forex :m]
-    :trailing-n 10}
-   (t/zoned-date-time "2024-10-02T00:29Z[UTC]")))
+(m/?
+ (quanta.bar.env/get-trailing-bars
+  env
+  {:asset "BTCUSDT"
+   :calendar [:forex :m]
+   :trailing-n 10}
+  (t/zoned-date-time "2024-10-02T00:29Z[UTC]")))
 
 (trailing-window [:crypto :m] 2)
 ;; => (#time/zoned-date-time "2024-10-02T00:31Z[UTC]"

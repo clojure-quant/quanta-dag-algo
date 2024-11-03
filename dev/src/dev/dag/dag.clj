@@ -24,11 +24,21 @@
       (dag/add-constant-cell :a 2)
       (dag/add-constant-cell :b 3)
       (dag/add-atom-cell :c a)
-      (dag/add-formula-cell :ab + [:a :b] false)
-      (dag/add-formula-cell :ac mult-task [:c :a] true)
-      (dag/add-formula-cell :ac2 slow-mult-task [:c :a] true)
-      (dag/add-formula-cell :abc * [:c :ab] false)
-      (dag/add-formula-cell :ababc * [:ab :abc] false)))
+      (dag/add-formula-cell :ab {:fn +
+                                 :input [:a :b]
+                                 :sp? false})
+      (dag/add-formula-cell :ac {:fn mult-task
+                                 :input [:c :a]
+                                 :sp? true})
+      (dag/add-formula-cell :ac2 {:fn slow-mult-task
+                                  :input [:c :a]
+                                  :sp? true})
+      (dag/add-formula-cell :abc {:fn *
+                                  :input [:c :ab]
+                                  :sp? false})
+      (dag/add-formula-cell :ababc {:fn *
+                                    :input [:ab :abc]
+                                    :sp? false})))
 
 (dag/get-current-value model :a)
 (dag/get-current-value model :b)
@@ -84,13 +94,15 @@
   (-> (dag/create-dag {:log-dir ".data/"})
       (dag/add-constant-cell :asset "QQQ")
       (dag/add-constant-cell :asset2 "QQQ")
-      (dag/add-formula-cell :assets (fn [asset1 asset2]
-                                      [asset1 asset2]) [:asset :asset2] false)
+      (dag/add-formula-cell :assets {:fn (fn [asset1 asset2]
+                                           [asset1 asset2])
+                                     :input [:asset :asset2]})
       (dag/add-cell :dt dt-every-10-seconds)
-      (dag/add-formula-cell :quote (fn [asset dt]
-                                     {:asset asset
-                                      :dt dt
-                                      :price (rand 100)}) [:asset :dt] false)))
+      (dag/add-formula-cell :quote {:fn (fn [asset dt]
+                                          {:asset asset
+                                           :dt dt
+                                           :price (rand 100)})
+                                    :input [:asset :dt]})))
 
 (dag/cell-ids dag-rt)
 

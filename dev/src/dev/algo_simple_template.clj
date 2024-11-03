@@ -5,15 +5,15 @@
    [quanta.dag.env :refer [log]]
    [dev.algo-simple :refer [simple-algo]]))
 
-(defn viz-print [opts data]
-  (log "calculating viz-fn with data: " data)
+(defn viz-print [env opts data]
+  (log env "calculating viz-fn with data: " data)
   {:creator "viz-print"
    :data data
    :viz-opts opts})
 
 (def simple-template
   {:id :simple
-   :algo simple-algo
+   :fn simple-algo
    :options [{:type :select
               :path [:x]
               :name "x param"

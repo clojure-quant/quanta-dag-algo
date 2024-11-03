@@ -1,5 +1,6 @@
 (ns quanta.dag.core
   (:require
+   [taoensso.telemere :as t]
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]
    [quanta.dag.util :as util]
@@ -78,21 +79,45 @@
 ;  (catch AssertionError ex (create-error spec ex))
 ;  (catch Exception ex (create-error spec ex)))
 
-(defn add-formula-raw-cell [dag cell-id formula-raw-fn input-cell-id-vec]
-  (assert dag "dag needs to be non nil")
-  (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
-  (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
-        ;_ (println "all input cells are good! input-cells: " input-cells)
-        formula-cell-raw (formula-raw-fn dag input-cells)]
-    (add-cell dag cell-id formula-cell-raw)))
+(defn run-fn [dag cell-id {:keys [fn args env? opts]
+                           :or {env? false
+                                opts nil}}]
+  (let [env (assoc (:env dag)
+                   :cell-id cell-id)]
+    (cond
+      (and env? opts)
+      (apply fn env opts args)
 
-(defn calculate [dag cell-id formula-fn args]
-  ;(println "calculating  " cell-id " args: " args)
-  (let [r (with-bindings (assoc (:env dag)
-                                #'quanta.dag.env/*cell-id* cell-id)
-            (apply formula-fn args))]
-    ;(println "calc r: " r)
-    r))
+      env?
+      (apply fn env args)
+
+      opts
+      (apply fn opts args)
+
+      :else
+      (apply fn args))))
+
+(defn calculate [dag cell-id {:keys [sp?]
+                              :or {sp? false}
+                              :as opts}]
+  (m/sp
+   ;(t/log! (str "calculate cell-id " cell-id))
+   (let [r (run-fn dag cell-id opts)
+         r (if sp?
+             (m/? r)
+             r)]
+     ;(t/log! (str "calculate cell-id " cell-id " finished!"))
+     ;(t/log! (str "calculate result " r))
+     r)))
+
+(defn add-formula-raw-cell [dag cell-id {:keys [fn input] :as opts}]
+  (assert dag "dag needs to be non nil")
+  (assert (vector? input) ":input needs to be a vector")
+  (assert fn ":fn needs to be defined")
+  (assert (fn? fn) ":fn needs to be a function")
+  (let [input-cells (map #(get-cell-or-throw dag %) input)
+        formula-cell-raw (run-fn dag cell-id (assoc opts :args input-cells))]
+    (add-cell dag cell-id formula-cell-raw)))
 
 (defn some-input-no-value? [args]
   (some is-no-val? args))
@@ -101,13 +126,20 @@
   (some-input-no-value? [1 2 3])
   (some-input-no-value? [1 2 3 nil])
   (some-input-no-value? [1 2 3 nil (create-no-val :34)])
- ; 
+
+  (with-bindings {#'quanta.dag.env/*cell-id* 33}
+    (+ 4 4 4))
+
+; 
   )
 
-(defn add-formula-cell [dag cell-id formula-fn input-cell-id-vec sp?]
+(defn add-formula-cell [dag cell-id {:keys [input]
+                                     :as opts}]
   (assert dag "dag needs to be non nil")
-  (assert (vector? input-cell-id-vec) "input-cell-id-vec needs to be a vector")
-  (let [input-cells (map #(get-cell-or-throw dag %) input-cell-id-vec)
+  (assert (vector? input) "input-cell-id-vec needs to be a vector")
+  (assert (:fn opts) ":fn needs to be defined")
+  (assert (fn? (:fn opts)) ":fn needs to be a function")
+  (let [input-cells (map #(get-cell-or-throw dag %) input)
         ;_ (println "all input cells are good!")
         input-f (apply m/latest vector input-cells)
         formula-result-f (m/ap
@@ -118,15 +150,14 @@
                               (create-no-val cell-id)
                               (try
                                 (let [start (. System (nanoTime))
+                                      opts (assoc opts :args args)
                                        ;`result (calculate dag formula-fn args)
                                       ;result (m/? (m/via m/cpu
                                       ;                   ;(if sp?
                                       ;                    ; (m/? (calculate dag cell-id formula-fn args))
                                       ;                     (calculate dag cell-id formula-fn args)))
                                       ;)
-                                      result (if sp?
-                                               (m/? (calculate dag cell-id formula-fn args))
-                                               (calculate dag cell-id formula-fn args))
+                                      result (m/? (calculate dag cell-id opts))
                                       stime (str "\r\ncell " cell-id
                                                  " calculated in "
                                                  (/ (double (- (. System (nanoTime)) start)) 1000000.0)
@@ -136,6 +167,7 @@
                                  ;(println "flow result: " result)
                                   result)
                                 (catch Exception ex
+                                  (t/log! (str "calculate " cell-id "ex: " ex))
                                   (when (:logger dag)
                                     (trace/write-ex (:logger dag) cell-id ex))
                                   (throw ex))))))
@@ -159,7 +191,7 @@
               :logger (when log-dir
                         (trace/setup log-dir id))
               :tasks (atom {})}]
-     (assoc dag :env (merge {#'quanta.dag.env/*dag* dag}
+     (assoc dag :env (merge {:dag dag}
                             env)))))
 
 (defn take-first-val [f]

@@ -5,19 +5,19 @@
    [quanta.algo.options :refer [apply-options]]
    [quanta.algo.dag.spec :refer [spec->ops]]))
 
-(defn multi-calc-d [opts dt]
-  (log "** multi-calc-d " dt)
+(defn multi-calc-d [env opts dt]
+  (log env "** multi-calc-d " dt)
   {:d dt :opts opts})
 
-(defn multi-calc-m [opts dt]
-  (log "** multi-calc-m " dt)
+(defn multi-calc-m [env opts dt]
+  (log env "** multi-calc-m " dt)
   {:m dt :opts opts})
 
-(defn multi-signal [opts d m]
-  (log "** multi-signal " {:day d :min m})
+(defn multi-signal [env opts d m]
+  (log env "** multi-signal " {:day d :min m})
   (vector d m))
 
-(defn multi-signal-raw [opts dag input-cells]
+(defn multi-signal-raw [opts input-cells]
   (println "creating multi-signal-raw cell: " opts "input cells: " input-cells)
   (let [formula-fn (fn [d m]
                      (println "** multi-signal-raw " {:day d :min m})
@@ -28,16 +28,19 @@
 (def multi-algo
   [{:asset "BTCUSDT"} ; this options are global
    :day {:calendar [:crypto :d]
-         :algo  multi-calc-d
+         :fn  multi-calc-d
+         :env? true
          :x 2}
    :min {:calendar [:crypto :m]
-         :algo multi-calc-m
+         :fn multi-calc-m
+         :env? true
          :y 5}
    :signal {:formula [:day :min]
-            :algo multi-signal
+            :fn multi-signal
+            :env? true
             :z 27}
    :signal2 {:formula-raw [:day :min]
-             :algo multi-signal-raw
+             :fn multi-signal-raw
              :z 27}])
 
 (spec->ops multi-algo)

@@ -1,13 +1,13 @@
 (ns dev.algo-bollinger-template
   (:require
    [tick.core :as t]
-   [quanta.algo.env.bars]
-   [ta.import.provider.bybit.ds :as bybit]
-   [dev.algo-bollinger :refer [bollinger-algo]]
-   [quanta.algo.template :refer [calculate]]))
+   [quanta.market.barimport.bybit.import-parallel :as bybit]
+   [quanta.bar.env]
+   [quanta.algo.template :refer [calculate]]
+   [dev.algo-bollinger :refer [bollinger-algo]]))
 
-(def bar-db (bybit/create-import-bybit))
-(def env {#'quanta.algo.env.bars/*bar-db* bar-db})
+(def bar-db (bybit/create-import-bybit-parallel))
+(def env {#'quanta.bar.env/*bar-db* bar-db})
 
 (defn viz-print [opts data]
   (println "calculating viz-fn with data: " data)

@@ -1,28 +1,17 @@
 (ns quanta.algo.dag.spec)
 
-(defn spec->op [spec]
-  (let [{:keys [calendar formula formula-raw value]} spec]
-    (cond
-      ; time-algo
-      calendar
-      {:calendar calendar
-       :algo-fn (:algo spec)
-       :opts (dissoc spec :algo)}
-      ; formula (uses other cells)
-      formula
-      {:formula formula
-       :algo-fn (:algo spec)
-       :opts (dissoc spec :algo)}
-      formula-raw
-      {:formula-raw formula-raw
-       :algo-fn (:algo spec)
-       :opts (dissoc spec :algo)}
+(defn spec->op [{:keys [calendar formula formula-raw value]
+                 :as spec}]
+  (cond
+      ; time-algo / formula (uses other cells)
+    (or calendar formula formula-raw)
+    spec
       ; value (create imput cell)
-      value
-      {:value value}
+    value
+    {:value value}
       ; bad spec syntax
-      :else
-      (throw (ex-info "unsupported cell-type" {:spec spec})))))
+    :else
+    (throw (ex-info "unsupported cell-type" {:spec spec}))))
 
 (defn spec->ops
   "returns ops or throws"

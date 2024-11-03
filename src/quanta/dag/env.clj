@@ -2,15 +2,17 @@
   (:require
    [quanta.dag.trace :as trace]))
 
-(def ^:dynamic *dag* nil)
+(defn get-dag [env]
+  (let [bar-db (:dag env)]
+    (assert bar-db ":env does not provide :dag")
+    bar-db))
 
-(defn opts []
-  @(:opts *dag*))
+(defn log [env label v]
+  (when-let [logger (:logger (get-dag env))]
+    (trace/write-edn-raw logger label v)))
 
-(defn log [label v]
-  (trace/write-edn-raw (:logger *dag*) label v))
+(defn opts [env]
+  @(:opts (get-dag env)))
 
-(def ^:dynamic *cell-id* nil)
-
-(defn get-cell-id []
-  *cell-id*)
+(defn get-cell-id [env]
+  (:cell-id env))
