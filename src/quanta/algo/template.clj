@@ -120,13 +120,14 @@
   (info "adding viz " viz-mode  " to dag as cell :viz ..")
   (let [mode (get template viz-mode)
         _ (assert mode (str "viz key " viz-mode " not found."))
-        {:keys [viz viz-options key]
+        {:keys [viz viz-options key env?]
          :or {key :algo
-              viz-options {}}} mode
+              ;viz-options {} ; nil means, no options in fn
+              env? true}} mode
         cell-spec {:fn viz
                    :input [key]
                    :opts viz-options
-                   :env? false
+                   :env? env?
                    :sp? false}]
     (assert (dag/get-cell d key) (str "dag does not contain viz cell: " key))
     (info "adding viz-cell " cell-spec)
