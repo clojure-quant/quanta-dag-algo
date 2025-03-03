@@ -4,7 +4,7 @@
    [quanta.dag.core :as dag]
    [quanta.dag.env.bars]
    [quanta.dag.env :refer [log]]
-   [quanta.algo.dag.calendar.live :refer [get-calendar-flow]]
+   [quanta.calendar.scheduler :refer [get-calendar-flow]]
    [quanta.market.barimport.bybit.import-parallel :as bybit]
    [quanta.bar.env :refer [get-trailing-bars]]))
 

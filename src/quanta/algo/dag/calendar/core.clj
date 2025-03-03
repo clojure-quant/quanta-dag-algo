@@ -2,7 +2,7 @@
   (:require
    [missionary.core :as m]
    [ta.calendar.core :refer [current-close]]
-   [quanta.algo.dag.calendar.live :as live]))
+   [quanta.calendar.scheduler :as live]))
 
 (defn calculate-calendar [dt]
   (fn [cal]

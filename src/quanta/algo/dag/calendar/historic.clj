@@ -1,6 +1,6 @@
 (ns quanta.algo.dag.calendar.historic
   (:require
-   [ta.calendar.combined :refer [combined-event-seq]]))
+   [quanta.calendar.combined :refer [combined-event-seq]]))
 
 ; firing old events that need to be syncronized with
 ; all calendars needs a little refactoring,
