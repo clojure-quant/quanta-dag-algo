@@ -82,6 +82,7 @@
 (defn- run-fn [dag cell-id {:keys [fn args env? opts]
                             :or {env? false
                                  opts nil}}]
+  ;(println "run-fn env? " env? " opts " opts)
   (let [env (assoc (:env dag)
                    :cell-id cell-id)]
     (cond
@@ -116,7 +117,9 @@
   (assert fn ":fn needs to be defined")
   (assert (fn? fn) ":fn needs to be a function")
   (let [input-cells (map #(get-cell-or-throw dag %) input)
-        formula-cell-raw (run-fn dag cell-id (assoc opts :args input-cells))]
+        opts (assoc opts :args input-cells)
+        _ (println "formula raw opts: " opts)
+        formula-cell-raw (run-fn dag cell-id opts)]
     (add-cell dag cell-id formula-cell-raw)))
 
 (defn some-input-no-value? [args]
@@ -138,6 +141,7 @@
   (assert (vector? input) "input needs to be a vector")
   (assert (:fn opts) ":fn needs to be defined")
   (assert (fn? (:fn opts)) ":fn needs to be a function")
+  (println "add-formula-cell " cell-id opts)
   (let [input-cells (map #(get-cell-or-throw dag %) input)
         ;_ (println "all input cells are good!")
         input-f (apply m/latest vector input-cells)
@@ -175,6 +179,12 @@
                                       (m/relieve {})
                                       (m/signal))]
     (add-cell dag cell-id formula-result-f-wrapped)))
+
+(defn add-flow-cell [d cell-id {:keys [fn opts env?]}]
+  (let [cell-flow (if env?
+                    (fn (:env d) opts)
+                    (fn opts))]
+    (add-cell d cell-id cell-flow)))
 
 (defn create-dag
   ([]

@@ -1,13 +1,14 @@
-(ns dev.algo-simple-template
+(ns dev.algo.simple.template
   (:require
    [tick.core :as t]
    [quanta.algo.template :as templ]
-   [dev.algo-simple :refer [simple-algo]]))
+   [dev.algo.simple.algo :refer [simple-algo]]))
 
-(defn viz-print [opts data]
+(defn viz-print [env opts data]
   {:creator "viz-print"
-   :data data
-   :viz-opts opts})
+   :env env
+   :viz-opts opts
+   :data data})
 
 (def simple-template
   {:id :simple

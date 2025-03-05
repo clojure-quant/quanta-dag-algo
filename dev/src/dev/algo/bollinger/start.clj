@@ -1,13 +1,16 @@
-(ns dev.algo-bollinger-start
+(ns dev.algo.bollinger.start
   (:require
    [tick.core :as t]
    [missionary.core :as m]
    [quanta.dag.core :as dag]
    [quanta.algo.core :as algo]
+   ; env
    [quanta.bar.env]
+   ; calc fns
    [quanta.market.barimport.bybit.import-parallel :as bybit]
    [ta.calendar.core :refer [trailing-window]]
-   [dev.algo-bollinger :refer [bollinger-algo]]))
+   ; algo
+   [dev.algo.bollinger.algo :refer [bollinger-algo]]))
 
 ;; ENV
 
@@ -18,14 +21,14 @@
 
 (def bollinger
   (-> (dag/create-dag {:log-dir ".data/"
+                       :opts {:dt (t/instant)}
                        :env env})
-      (algo/add-env-time-snapshot (t/instant))
       (algo/add-algo bollinger-algo)))
 
 (dag/cell-ids bollinger)
 
-(dag/start-log-cell bollinger [:crypto :d])
-(dag/start-log-cell bollinger [:crypto :m])
+(dag/start-log-cell bollinger :dt-day)
+(dag/start-log-cell bollinger :dt-min)
 
 (dag/start-log-cell bollinger :bars-day)
 
@@ -40,20 +43,20 @@
 (def bollinger-rt
   (-> (dag/create-dag {:log-dir ".data/"
                        :env env})
-      (algo/add-env-time-live)
       (algo/add-algo bollinger-algo)))
 
 (dag/cell-ids bollinger-rt)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)
 
-(dag/start-log-cell bollinger-rt [:crypto :d])
-(dag/start-log-cell bollinger-rt [:crypto :m])
-(dag/stop-log-cell  bollinger-rt [:crypto :m])
+(dag/start-log-cell bollinger-rt :dt-day)
+(dag/start-log-cell bollinger-rt :dt-min)
+(dag/stop-log-cell  bollinger-rt :dt-min)
 (dag/start-log-cell bollinger-rt :day)
 (dag/start-log-cell bollinger-rt :min)
 (dag/start-log-cell bollinger-rt :stats)
 
 (dag/running-tasks bollinger-rt)
+(dag/stop-log-cell  bollinger-rt :stats)
 
 (dag/cell-ids bollinger-rt)
 ;; => ([:crypto :d] :day [:crypto :m] :min :signal)

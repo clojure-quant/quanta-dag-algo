@@ -1,23 +1,26 @@
-(ns dev.algo-multi
+(ns dev.algo.multi.algo
   (:require
    [missionary.core :as m]
+   ; dag envs
+   [quanta.calendar.env :refer [get-calendar]]
    [quanta.dag.env :refer [log]]
+   ; algo dag
    [quanta.algo.options :refer [apply-options]]
-   [quanta.algo.dag.spec :refer [spec->ops]]))
+   [quanta.algo.spec :refer [spec->ops]]))
 
 (defn multi-calc-d [env opts dt]
   (log env "** multi-calc-d " dt)
   {:d dt :opts opts})
 
 (defn multi-calc-m [env opts dt]
-  (log env "** multi-calc-m " dt)
+  (log env "** multi-calc-m " (str "dt: " dt))
   {:m dt :opts opts})
 
 (defn multi-signal [env opts d m]
   (log env "** multi-signal " {:day d :min m})
   (vector d m))
 
-(defn multi-signal-raw [opts input-cells]
+(defn multi-signal-raw [opts & input-cells]
   (println "creating multi-signal-raw cell: " opts "input cells: " input-cells)
   (let [formula-fn (fn [d m]
                      (println "** multi-signal-raw " {:day d :min m})
@@ -26,22 +29,28 @@
     (m/signal formula-cell)))
 
 (def multi-algo
-  [{:asset "BTCUSDT"} ; this options are global
-   :day {:calendar [:crypto :d]
-         :fn  multi-calc-d
+  {:* {:asset "BTCUSDT"} ; this options are global
+   :dt-day {:fn get-calendar
+            :calendar [:crypto :d]}
+   :day {:fn  multi-calc-d
+         :deps [:dt-day]
          :env? true
          :x 2}
-   :min {:calendar [:crypto :m]
-         :fn multi-calc-m
+   :dt-min {:fn get-calendar
+            :calendar [:crypto :m]}
+   :min {:fn multi-calc-m
+         :deps [:dt-min]
          :env? true
          :y 5}
-   :signal {:formula [:day :min]
-            :fn multi-signal
+   :signal {:fn multi-signal
+            :deps [:day :min]
             :env? true
             :z 27}
-   :signal2 {:formula-raw [:day :min]
-             :fn multi-signal-raw
-             :z 27}])
+   :signal2 {:fn multi-signal-raw
+             :deps [:day :min]
+             :raw? true
+             :env? false
+             :z 27}})
 
 (spec->ops multi-algo)
 
@@ -58,9 +67,9 @@
 ;;       :algo-fn #function[dev.algo-multi/multi-signal],
 ;;       :opts {:asset "BTCUSDT", :formula [:day :min], :z 27}}]]
 
-(apply-options multi-algo {[2 :x] 2
-                           [4 :y] :m
-                           [6 :z] 90})
+(apply-options multi-algo {[:day :x] 2
+                           [:min :y] :YYY
+                           [:signal :z] 90})
 ;; => [{:asset "BTCUSDT"}
 ;;     :day
 ;;     {:calendar [:crypto :d], :algo #function[dev.algo-multi/multi-calc], :x 2}

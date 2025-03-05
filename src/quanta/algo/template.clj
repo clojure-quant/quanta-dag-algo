@@ -144,8 +144,10 @@
   [dag-env template viz-mode dt]
   (info "creating algo-dag..")
   (let [algo (:algo template) ; :cells or :model is a better name
+        env (or (:env dag-env) {})
+        env (assoc env :dt dt)
+        dag-env (assoc dag-env :env env)
         d (-> (dag/create-dag dag-env #_{:log-dir ".data/" :env env})
-              (algo/add-env-time-snapshot dt)
               (algo/add-algo algo))]
     (add-viz-cell d template viz-mode)
     (info "waiting for viz result.. ")

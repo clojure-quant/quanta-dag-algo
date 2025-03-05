@@ -3,9 +3,9 @@
    [quanta.dag.trace :as trace]))
 
 (defn get-dag [env]
-  (let [bar-db (:dag env)]
-    (assert bar-db ":env does not provide :dag")
-    bar-db))
+  (let [dag (:dag env)]
+    (assert dag ":env does not provide :dag")
+    dag))
 
 (defn log [env label v]
   (when-let [logger (:logger (get-dag env))]

@@ -1,4 +1,4 @@
-(ns dev.algo-bollinger-template
+(ns dev.algo.bollinger.template
   (:require
    [tick.core :as t]
    [quanta.market.barimport.bybit.import-parallel :as bybit]

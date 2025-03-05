@@ -1,14 +1,16 @@
-(ns dev.algo-bollinger
+(ns dev.algo.bollinger.algo
   (:require
-   [taoensso.telemere :as t]
    [missionary.core :as m]
    [tech.v3.datatype :as dtype]
    [tablecloth.api :as tc]
    [ta.indicator.band :as band]
    [ta.indicator.signal :refer [cross-up]]
+   ; envs
    [quanta.dag.env :refer [log]]
+   [quanta.calendar.env :refer [get-calendar]]
    [quanta.bar.env :refer [get-trailing-bars]]
-   [quanta.algo.dag.spec :refer [spec->ops]]
+   ; algo
+   [quanta.algo.spec :refer [spec->ops]]
    [quanta.algo.options :refer [apply-options]]))
 
 (defn entry-one [long short]
@@ -40,33 +42,42 @@
 
 (defn get-trailing-bars-log [env opts dt]
   (m/sp
-    ;(t/log! (str "get-trailing-bars dt:" dt " opts: " opts)) 
    (let [bar-ds (m/? (get-trailing-bars env opts dt))]
-      ;(t/log! (str "get-trailing-bars-ds: " bar-ds)) 
-     (log env "bar-ds: " bar-ds)
+     ;(log env "bar-ds: " bar-ds)
      bar-ds)))
 
 (def bollinger-algo
   {:* {:asset "BTCUSDT"} ; this options are global
-   :bars-day {:calendar [:crypto :d]
-              :fn get-trailing-bars-log
+   :dt-day {:fn get-calendar
+            :calendar [:crypto :d]}
+   :bars-day {:fn get-trailing-bars-log
+              :deps [:dt-day]
+              :env? true
+              :sp? true
+              :calendar [:crypto :d]
               :trailing-n 800}
-   :day {:formula [:bars-day]
-         :fn  bollinger-calc
+   :day {:fn  bollinger-calc
+         :deps [:bars-day]
          :env? true
          :atr-n 10
          :atr-k 0.6}
-   :bars-min {:calendar [:crypto :m]
-              :fn get-trailing-bars-log
+   :dt-min {:fn get-calendar
+            :calendar [:crypto :m]}
+   :bars-min {:fn get-trailing-bars-log
+              :deps [:dt-min]
+              :env? true
+              :sp? true
+              :calendar [:crypto :m]
               :trailing-n 20}
-   :min {:formula [:bars-min]
-         :fn bollinger-calc   ; min gets the global option :asset 
+   :min {:fn bollinger-calc   ; min gets the global option :asset 
+         :deps [:bars-min]
          :env? true
          :trailing-n 20         ; on top of its own local options 
          :atr-n 5
          :atr-k 0.3}
-   :stats {:formula [:day :min]
-           :fn bollinger-stats
+   :stats {:fn bollinger-stats
+           :deps [:day :min]
+           :env? false
            :carry-n 2}})
 
 (spec->ops bollinger-algo)
