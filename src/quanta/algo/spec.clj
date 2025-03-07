@@ -4,8 +4,12 @@
 
 (defn spec->op [{:keys [fn deps value sp? env? raw?]
                  :as spec}]
-  (let [cell-opts (dissoc spec :fn :deps :value :sp? :env? :raw?)]
+  (let [cell-opts (dissoc spec :fn :deps :value :sp? :env? :raw? :>)]
     (cond
+      (:> spec)
+      [:children {:variations (:> spec)
+                  :template (spec->op (dissoc spec :>))}]
+
       value
       [:value value]
 
