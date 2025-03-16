@@ -1,5 +1,6 @@
 (ns dev.algo.simple.algo
   (:require
+   [quanta.calendar.interval :as i]
    ; envs
    [quanta.calendar.env :refer [get-calendar]]
    ; algo dag
@@ -12,11 +13,18 @@
 
 (def simple-algo
   {:* {:x 3}
-   :dt {:fn get-calendar
-        :calendar [:crypto :m]}
+   :interval {:fn get-calendar
+              :calendar [:crypto :m]
+              :env? true}
+   :dt {:fn (fn [_ interval]
+              (println "calculating interval close date..")
+              (-> interval i/current :close))
+        :deps [:interval]
+        :env? false}
    :demo {:fn demo-calc
           :deps [:dt]
           :env? false
+          :opts? true
           :demo-opt-1 42}})
 
 (spec->ops simple-algo)

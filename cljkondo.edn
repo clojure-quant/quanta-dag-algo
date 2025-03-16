@@ -39,28 +39,25 @@
 ; namespaces in this list are those we get for side-effects.
   ; it is also possible to do regex search here:
   ; https://github.com/borkdude/clj-kondo/blob/master/doc/config.md
-  :unused-namespace {:level :off
+  :unused-namespace {:level :warn
                      :exclude [clojure.core.async
                                cljs.core.async
                                cljs.core.async.macros]}
 
-  :unused-binding {:level :off}
+  :unused-binding {:level :warn}
   ; warning: #'taoensso.timbre/warn is referred but never used
 
-  :unused-referred-var {:level :off
+  :unused-referred-var {:level :warn
                         :exclude {taoensso.timbre [trace tracef ; dont be strict in referring to logging functions 
                                                    debug debugf
                                                    info infof
                                                    warn warnf
                                                    error errorf]
-                                  clojure.core.async [<! <!! >! >!! put! chan go go-loop]
-                                  cljs.core.async  [<! <!! >! >!! put! chan go go-loop]
-                                  cljs.core.async.macros [go go-loop]
-                                  re-frame.core [reg-event-db dispatch]}}
+                                                                    }}
 
   :unused-private-var {:level :info}
 
-  :unresolved-symbol {:level :info
+  :unresolved-symbol {:level :warn
                       :exclude-patterns ["idx"]
                        ;:creates-vars {org.httpkit.server/with-channel [con]}
                       }
@@ -85,9 +82,7 @@
           ;; output can be filtered and removed by regex on filename. empty options leave the output untouched.
           :include-files [] #_["^src" "^test"]
           :exclude-files [;".*cljs"
-                          "./lib/indicator/src/ta/indicator/trade.*"
-                          "./lib/viz/src/ta/viz/notebook.*"
-                          ;"src/demo/goldly.*" 
+                          "src/demo/goldly.*" 
                           ;"^cljs/core"
                          ; "profiles/test/src/demo/cljs.*"
                           ]

@@ -4,10 +4,10 @@
  nano-id/nano-id {:mvn/version "1.1.0"}
  tick/tick {:mvn/version "0.6.2"} ; dag-logfiles use timestamp
  babashka/fs {:mvn/version "0.5.22"} ; create log dir
- missionary/missionary {:mvn/version "b.40"}
+ missionary/missionary {:mvn/version "b.44"}
  com.rpl/specter {:mvn/version "1.1.4"} ; algo apply-options
  ; logging
- org.pinkgorilla/timbre {:mvn/version "0.0.7"}
+ org.pinkgorilla/timbre {:mvn/version "0.0.8"}
  com.taoensso/telemere {:mvn/version "1.0.0-beta25"}}
  :aliases
  {:test {:extra-paths ["test"]
@@ -17,7 +17,7 @@
          :exec-fn cognitect.test-runner.api/test}
   
   :lint
-  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.03.13"}}
+  {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.02.20"}}
    :main-opts ["-m" "clj-kondo.main"
                "--config" "cljkondo.edn"
                "--fail-level" "error"
@@ -25,6 +25,13 @@
                "./src"
                "./dev/src"
                ]}
+  
+   :eastwood
+  {:main-opts ["-m"
+               "eastwood.lint"
+                     ;; Any Eastwood options can be passed here as edn:
+               {}]
+   :extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}}
   
   ; https://github.com/weavejester/cljfmt
   :cljfmt

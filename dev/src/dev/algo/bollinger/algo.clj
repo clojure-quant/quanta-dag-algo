@@ -1,6 +1,5 @@
 (ns dev.algo.bollinger.algo
   (:require
-   [missionary.core :as m]
    [tech.v3.datatype :as dtype]
    [tablecloth.api :as tc]
    [ta.indicator.band :as band]
@@ -40,17 +39,12 @@
      :min-mid min-mid
      :diff (- min-mid day-mid)}))
 
-(defn get-trailing-bars-log [env opts dt]
-  (m/sp
-   (let [bar-ds (m/? (get-trailing-bars env opts dt))]
-     ;(log env "bar-ds: " bar-ds)
-     bar-ds)))
-
 (def bollinger-algo
   {:* {:asset "BTCUSDT"} ; this options are global
    :dt-day {:fn get-calendar
+            :env? true
             :calendar [:crypto :d]}
-   :bars-day {:fn get-trailing-bars-log
+   :bars-day {:fn get-trailing-bars
               :deps [:dt-day]
               :env? true
               :sp? true
@@ -63,7 +57,7 @@
          :atr-k 0.6}
    :dt-min {:fn get-calendar
             :calendar [:crypto :m]}
-   :bars-min {:fn get-trailing-bars-log
+   :bars-min {:fn get-trailing-bars
               :deps [:dt-min]
               :env? true
               :sp? true

@@ -3,43 +3,36 @@
    [tick.core :as t]
    [quanta.dag.core :as dag]
    [quanta.algo.core :refer [add-algo]]
+   [quanta.calendar.env :refer [create-calendar-env set-dt]]
    [dev.algo.simple.algo :refer [simple-algo]]))
 
-;; SNAPSHOT ************************************************************
+(def env (create-calendar-env))
 
 (def simple
   (-> (dag/create-dag {:log-dir ".data/"
-                       :env {}
-                       :opts {:dt (t/instant)}})
+                       :env env
+                       :opts {}})
       (add-algo simple-algo)))
 
 (dag/cell-ids simple)
-;; => ([:crypto :m] :algo)
+;; => (:interval :dt :demo)
 
 ;; when the algo-spec does only specify ONE algo, then
 ;; the algo result cell is called :algo
 
 ;; this gets written to the logfile of the dag.
+(dag/start-log-cell simple :interval)
 (dag/start-log-cell simple :dt)
 (dag/start-log-cell simple :demo)
-(dag/start-log-cell simple :xxx)
 
-;; LIVE ****************************************************************
+;; HISTORIC ****************************************************************
 
-(def simple-rt
-  (-> (dag/create-dag {:log-dir ".data/"
-                       :env {}})
-      (add-algo simple-algo)))
+(set-dt env (t/instant))
 
-(dag/start-log-cell simple-rt :demo)
-(dag/stop-all! simple-rt)
+(set-dt env (t/instant "2024-07-12T02:04:56Z"))
 
-;; TEST A SECOND DAG at the same time. 
+;; LIVE AGAIN ****************************************************************
 
-(def simple-rt2
-  (-> (dag/create-dag {:log-dir ".data/"
-                       :env {}})
-      (add-algo simple-algo)))
+(set-dt env nil)
 
-(dag/start-log-cell simple-rt2 :demo)
-(dag/stop-all! simple-rt2)
+(dag/stop-all! simple)
